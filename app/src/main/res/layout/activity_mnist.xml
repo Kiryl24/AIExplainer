@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#F0F0F0">
+    android:background="#F0F0F0"
+    android:fitsSystemWindows="true">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -77,14 +78,33 @@
                 android:textColor="#FFFFFF"/>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_classify"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="Klasyfikuj"
-            android:textSize="18sp"
-            android:backgroundTint="#2ECC71"
-            android:textColor="#FFFFFF"/>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageButton
+                android:id="@+id/btn_explain"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/border_rectangle"
+                android:backgroundTint="#F0F0F0"
+                android:src="@drawable/ic_help"
+                android:contentDescription="Jak to działa?"
+                android:padding="14dp"
+                android:scaleType="fitCenter" />
+            <Button
+                android:id="@+id/btn_classify"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="Klasyfikuj"
+                android:textSize="18sp"
+                android:backgroundTint="#2ECC71"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

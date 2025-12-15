@@ -1,12 +1,13 @@
 package edu.jkiryla.aiexplainer;
 
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton; // <--- DODANY IMPORT
+import android.widget.ImageButton; // <--- WAŻNE
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,6 +43,22 @@ public class MnistActivity extends AppCompatActivity {
         Button btnClear = findViewById(R.id.btn_clear);
         Button btnClassify = findViewById(R.id.btn_classify);
 
+        ImageButton btnExplain = findViewById(R.id.btn_explain);
+
+        btnExplain.setOnClickListener(v -> {
+            Bitmap originalBitmap = drawView.getBitmap();
+            Bitmap smallBitmap = Bitmap.createScaledBitmap(originalBitmap, 28, 28, true);
+
+            java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
+            smallBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+
+            Intent intent = new Intent(MnistActivity.this, ExplainActivity.class);
+            intent.putExtra("image_data", byteArray);
+            intent.putExtra("title", "Explainer: MNIST");
+            startActivity(intent);
+        });
+
         try {
             tflite = new Interpreter(loadModelFile());
         } catch (IOException e) {
@@ -65,7 +82,6 @@ public class MnistActivity extends AppCompatActivity {
         }
 
         Bitmap originalBitmap = drawView.getBitmap();
-
         Bitmap smallBitmap = Bitmap.createScaledBitmap(originalBitmap, 28, 28, true);
 
         ByteBuffer inputBuffer = ByteBuffer.allocateDirect(4 * 28 * 28 * 1);
@@ -78,9 +94,7 @@ public class MnistActivity extends AppCompatActivity {
 
         for (int i = 0; i < pixels.length; i++) {
             int pixelValue = pixels[i];
-
             int r = (pixelValue >> 16) & 0xFF;
-
             float normalized = (255.0f - r) / 255.0f;
 
             inputBuffer.putFloat(normalized);

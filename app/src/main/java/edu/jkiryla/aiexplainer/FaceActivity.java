@@ -1,6 +1,7 @@
 package edu.jkiryla.aiexplainer;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
@@ -44,15 +45,11 @@ public class FaceActivity extends AppCompatActivity {
     private ImageView modelInputPreview;
     private Interpreter tflite;
 
+    private Bitmap lastCapturedBitmap = null;
+
     private final String[] emotions = {
-            "Neutralny",    // 0
-            "Radość",       // 1
-            "Zaskoczenie",  // 2
-            "Smutek",       // 3
-            "Złość",        // 4
-            "Obrzydzenie",  // 5
-            "Strach",       // 6
-            "Pogarda"       // 7
+            "Neutralny", "Radość", "Zaskoczenie", "Smutek",
+            "Złość", "Obrzydzenie", "Strach", "Pogarda"
     };
 
     @Override
@@ -67,6 +64,40 @@ public class FaceActivity extends AppCompatActivity {
 
         ImageButton btnBack = findViewById(R.id.btn_back_face);
         btnBack.setOnClickListener(v -> finish());
+
+        ImageButton btnExplainFace = findViewById(R.id.btn_explain_face);
+
+        btnExplainFace.setOnClickListener(v -> {
+            Bitmap bitmapToSend;
+
+            if (lastCapturedBitmap != null) {
+
+                bitmapToSend = lastCapturedBitmap;
+            } else {
+
+                Bitmap bitmap = viewFinder.getBitmap();
+                if (bitmap == null) {
+                    Toast.makeText(this, "Brak obrazu z kamery", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                int minDimension = Math.min(bitmap.getWidth(), bitmap.getHeight());
+                int cropSize = (int) (minDimension * 0.6);
+                int startX = (bitmap.getWidth() - cropSize) / 2;
+                int startY = (bitmap.getHeight() - cropSize) / 2;
+                Bitmap croppedBitmap = Bitmap.createBitmap(bitmap, startX, startY, cropSize, cropSize);
+                bitmapToSend = Bitmap.createScaledBitmap(croppedBitmap, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, true);
+            }
+
+            java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
+            bitmapToSend.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+
+            Intent intent = new Intent(FaceActivity.this, ExplainActivity.class);
+            intent.putExtra("image_data", byteArray);
+            intent.putExtra("title", "Explainer: TWARZ");
+            startActivity(intent);
+        });
 
         try {
             tflite = new Interpreter(loadModelFile());
@@ -90,19 +121,15 @@ public class FaceActivity extends AppCompatActivity {
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(viewFinder.getSurfaceProvider());
-
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA;
-
                 try {
                     cameraProvider.unbindAll();
                     cameraProvider.bindToLifecycle(this, cameraSelector, preview);
                 } catch (Exception exc) {
                     Log.e("FaceActivity", "Use case binding failed", exc);
                 }
-
             } catch (ExecutionException | InterruptedException e) {
                 Log.e("FaceActivity", "Camera provider failure", e);
             }
@@ -126,8 +153,9 @@ public class FaceActivity extends AppCompatActivity {
         Bitmap croppedBitmap = Bitmap.createBitmap(bitmap, startX, startY, cropSize, cropSize);
         Bitmap scaledBitmap = Bitmap.createScaledBitmap(croppedBitmap, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, true);
 
-        modelInputPreview.setImageBitmap(scaledBitmap);
+        lastCapturedBitmap = scaledBitmap;
 
+        modelInputPreview.setImageBitmap(scaledBitmap);
         ByteBuffer inputBuffer = convertBitmapToGrayscaleByteBuffer(scaledBitmap);
 
         float[][] output = new float[1][8];
@@ -137,7 +165,6 @@ public class FaceActivity extends AppCompatActivity {
 
         int bestIndex = -1;
         float maxProb = 0.0f;
-
         for (int i = 0; i < probabilities.length; i++) {
             if (probabilities[i] > maxProb) {
                 maxProb = probabilities[i];
@@ -147,12 +174,9 @@ public class FaceActivity extends AppCompatActivity {
 
         if (bestIndex != -1 && bestIndex < emotions.length) {
             resultText.setText(String.format("%s (%.1f%%)", emotions[bestIndex], maxProb * 100));
-
-            // Kolorowanie wyniku
-            if (emotions[bestIndex].equals("Radość")) resultText.setTextColor(Color.parseColor("#2ECC71")); // Zielony
+            if (emotions[bestIndex].equals("Radość")) resultText.setTextColor(Color.parseColor("#2ECC71"));
             else if (emotions[bestIndex].equals("Złość")) resultText.setTextColor(Color.RED);
-            else if (emotions[bestIndex].equals("Neutralny")) resultText.setTextColor(Color.DKGRAY);
-            else resultText.setTextColor(Color.BLACK);
+            else resultText.setTextColor(Color.DKGRAY);
         } else {
             resultText.setText("Nie rozpoznano");
         }
@@ -161,37 +185,24 @@ public class FaceActivity extends AppCompatActivity {
     private float[] softmax(float[] logits) {
         float[] probs = new float[logits.length];
         float maxLogit = -Float.MAX_VALUE;
-
-        for (float val : logits) {
-            if (val > maxLogit) maxLogit = val;
-        }
-
+        for (float val : logits) { if (val > maxLogit) maxLogit = val; }
         float sum = 0.0f;
         for (int i = 0; i < logits.length; i++) {
             probs[i] = (float) Math.exp(logits[i] - maxLogit);
             sum += probs[i];
         }
-
-        for (int i = 0; i < logits.length; i++) {
-            probs[i] /= sum;
-        }
-
+        for (int i = 0; i < logits.length; i++) { probs[i] /= sum; }
         return probs;
     }
 
     private ByteBuffer convertBitmapToGrayscaleByteBuffer(Bitmap bitmap) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * 1);
         byteBuffer.order(ByteOrder.nativeOrder());
-
         int[] pixels = new int[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE];
         bitmap.getPixels(pixels, 0, MODEL_INPUT_SIZE, 0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
-
         for (int pixelValue : pixels) {
             int r = (pixelValue >> 16) & 0xFF;
-            int g = (pixelValue >> 8) & 0xFF;
-            int b = pixelValue & 0xFF;
-
-            float gray = (r * 0.299f + g * 0.587f + b * 0.114f);
+            float gray = (r * 0.299f + (pixelValue >> 8 & 0xFF) * 0.587f + (pixelValue & 0xFF) * 0.114f);
             byteBuffer.putFloat(gray / 255.0f);
         }
         return byteBuffer;
