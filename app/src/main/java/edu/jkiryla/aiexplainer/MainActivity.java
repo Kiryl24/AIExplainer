@@ -21,5 +21,11 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        Button btnFace = findViewById(R.id.btn_face_recognition);
+        btnFace.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, FaceActivity.class);
+            startActivity(intent);
+        });
     }
 }

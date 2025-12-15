@@ -2,9 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature android:name="android.hardware.camera.any" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:label="@string/app_name"
-        android:theme="@style/Theme.AIExplainer">
+        android:theme="@style/Theme.AIExplainer"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
 
         <activity
             android:name=".MainActivity"
@@ -20,6 +25,12 @@
             android:name=".MnistActivity"
             android:exported="false"
             android:label="MNIST" />
+
+        <activity
+            android:name=".FaceActivity"
+            android:exported="false"
+            android:label="Rozpoznawanie Emocji" />
+
     </application>
 
 </manifest>

@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton; // <--- DODANY IMPORT
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,6 +35,9 @@ public class MnistActivity extends AppCompatActivity {
         drawView = findViewById(R.id.draw_view);
         resultText = findViewById(R.id.result_text);
         previewImage = findViewById(R.id.preview_image);
+
+        ImageButton btnBack = findViewById(R.id.btn_back_mnist);
+        btnBack.setOnClickListener(v -> finish());
 
         Button btnClear = findViewById(R.id.btn_clear);
         Button btnClassify = findViewById(R.id.btn_classify);
@@ -82,9 +86,7 @@ public class MnistActivity extends AppCompatActivity {
             inputBuffer.putFloat(normalized);
 
             int previewGray = (int) (normalized * 255);
-
             int previewColor = Color.rgb(previewGray, previewGray, previewGray);
-
             previewBitmap.setPixel(i % 28, i / 28, previewColor);
         }
 

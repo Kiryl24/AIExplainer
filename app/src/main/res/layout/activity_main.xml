@@ -1,27 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
     android:background="#F0F0F0">
 
-    <TextView
+    <ImageView
+        android:id="@+id/top_logo"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="25dp"
+        android:contentDescription="Logo"
+        android:src="@drawable/wsiiz_logo" />
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="AI Explainer"
-        android:textColor="#333333"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="50dp"/>
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center">
 
-    <Button
-        android:id="@+id/btn_mnist"
-        android:layout_width="250dp"
-        android:layout_height="60dp"
-        android:text="MNIST (Rozpoznawanie Cyfr)"
-        android:textSize="16sp"
-        android:backgroundTint="#3498DB"
-        android:textColor="#FFFFFF"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI Explainer"
+            android:textColor="#333333"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="50dp"/>
 
-</LinearLayout>
+        <Button
+            android:id="@+id/btn_mnist"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:text="MNIST (Rozpoznawanie Cyfr)"
+            android:textSize="16sp"
+            android:backgroundTint="#d3072a"
+            android:textColor="#FFFFFF"/>
+
+        <Button
+            android:id="@+id/btn_face_recognition"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:text="Rozpoznawanie emocji"
+            android:textSize="16sp"
+            android:backgroundTint="#d3072a"
+            android:textColor="#FFFFFF"/>
+
+    </LinearLayout>
+
+</FrameLayout>
